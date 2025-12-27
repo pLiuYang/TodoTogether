@@ -282,6 +282,10 @@ class _GroupScreenState extends State<GroupScreen> {
   Widget _buildTaskCard(Task task, TasksProvider tasksProvider) {
     final assignee = task.assigneeId != null ? _members[task.assigneeId] : null;
     final dateFormat = DateFormat('MMM d, h:mm a');
+    final hasDetails =
+        (task.description != null && task.description!.isNotEmpty) ||
+            task.reminderTime != null ||
+            assignee != null;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -291,7 +295,10 @@ class _GroupScreenState extends State<GroupScreen> {
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: hasDetails
+                ? CrossAxisAlignment.start
+                : CrossAxisAlignment.center,
             children: [
               // Checkbox
               Transform.scale(
@@ -306,10 +313,12 @@ class _GroupScreenState extends State<GroupScreen> {
               // Content
               Expanded(
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       task.title,
+                      textAlign: TextAlign.start,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w500,
@@ -331,23 +340,25 @@ class _GroupScreenState extends State<GroupScreen> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 4,
-                      children: [
-                        if (task.reminderTime != null)
-                          _buildChip(
-                            Icons.access_time,
-                            dateFormat.format(task.reminderTime!),
-                          ),
-                        if (assignee != null)
-                          _buildChip(
-                            Icons.person_outline,
-                            assignee.name,
-                          ),
-                      ],
-                    ),
+                    if (task.reminderTime != null || assignee != null) ...[
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 4,
+                        children: [
+                          if (task.reminderTime != null)
+                            _buildChip(
+                              Icons.access_time,
+                              dateFormat.format(task.reminderTime!),
+                            ),
+                          if (assignee != null)
+                            _buildChip(
+                              Icons.person_outline,
+                              assignee.name,
+                            ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
