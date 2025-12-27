@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'home_screen.dart';
 import '../models/models.dart';
 import '../providers/providers.dart';
 import '../services/storage_service.dart';
@@ -160,6 +161,16 @@ class _GroupScreenState extends State<GroupScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: Navigator.canPop(context)
+            ? null
+            : IconButton(
+                icon: const Icon(Icons.home_outlined),
+                onPressed: () {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(builder: (_) => const HomeScreen()),
+                  );
+                },
+              ),
         title: Text(_group!.name),
         actions: [
           IconButton(
