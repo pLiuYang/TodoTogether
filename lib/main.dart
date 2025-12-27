@@ -61,7 +61,23 @@ class AuthWrapper extends StatelessWidget {
     }
 
     if (auth.isAuthenticated) {
-      return const HomeScreen();
+      return FutureBuilder<String?>(
+        future: context.read<StorageService>().getLastGroupId(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(),
+              ),
+            );
+          }
+          final lastGroupId = snapshot.data;
+          if (lastGroupId != null) {
+            return GroupScreen(groupId: lastGroupId);
+          }
+          return const HomeScreen();
+        },
+      );
     }
 
     return const LoginScreen();

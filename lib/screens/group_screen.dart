@@ -34,11 +34,12 @@ class _GroupScreenState extends State<GroupScreen> {
     final storage = context.read<StorageService>();
 
     _group = groupsProvider.getGroupById(widget.groupId);
-    if (_group == null) {
-      _group = await storage.getGroupById(widget.groupId);
-    }
+    _group ??= await storage.getGroupById(widget.groupId);
 
     if (_group != null) {
+      // Save as last visited group
+      await storage.setLastGroupId(widget.groupId);
+
       // Load members
       final members = <String, User>{};
       for (final memberId in _group!.memberIds) {

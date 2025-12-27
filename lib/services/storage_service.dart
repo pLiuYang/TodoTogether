@@ -7,6 +7,7 @@ class StorageService {
   static const String _groupsKey = 'groups';
   static const String _tasksKey = 'tasks';
   static const String _currentUserKey = 'currentUser';
+  static const String _lastGroupIdKey = 'lastGroupId';
 
   late SharedPreferences _prefs;
 
@@ -26,6 +27,18 @@ class StorageService {
       await _prefs.remove(_currentUserKey);
     } else {
       await _prefs.setString(_currentUserKey, jsonEncode(user.toJson()));
+    }
+  }
+
+  Future<String?> getLastGroupId() async {
+    return _prefs.getString(_lastGroupIdKey);
+  }
+
+  Future<void> setLastGroupId(String? groupId) async {
+    if (groupId == null) {
+      await _prefs.remove(_lastGroupIdKey);
+    } else {
+      await _prefs.setString(_lastGroupIdKey, groupId);
     }
   }
 
