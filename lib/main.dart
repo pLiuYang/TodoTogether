@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'providers/providers.dart';
 import 'screens/screens.dart';
 import 'services/storage_service.dart';
+import 'services/notification_service.dart';
 import 'theme/app_theme.dart';
 
 void main() async {
@@ -11,20 +12,35 @@ void main() async {
   // Initialize storage service
   final storageService = StorageService();
   await storageService.init();
+
+  // Initialize notification service
+  final notificationService = NotificationService();
+  await notificationService.init();
+  // Request notification permissions early
+  await notificationService.requestPermissions();
   
-  runApp(TodoTogetherApp(storageService: storageService));
+  runApp(TodoTogetherApp(
+    storageService: storageService,
+    notificationService: notificationService,
+  ));
 }
 
 class TodoTogetherApp extends StatelessWidget {
   final StorageService storageService;
+  final NotificationService notificationService;
 
-  const TodoTogetherApp({super.key, required this.storageService});
+  const TodoTogetherApp({
+    super.key,
+    required this.storageService,
+    required this.notificationService,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         Provider<StorageService>.value(value: storageService),
+        Provider<NotificationService>.value(value: notificationService),
         ChangeNotifierProvider(
           create: (_) => AuthProvider(storageService)..init(),
         ),
@@ -32,14 +48,14 @@ class TodoTogetherApp extends StatelessWidget {
           create: (_) => GroupsProvider(storageService),
         ),
         ChangeNotifierProvider(
-          create: (_) => TasksProvider(storageService),
+          create: (_) => TasksProvider(storageService, notificationService),
         ),
       ],
       child: MaterialApp(
         title: 'TodoTogether',
-        debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         home: const AuthWrapper(),
+        debugShowCheckedModeBanner: false,
       ),
     );
   }

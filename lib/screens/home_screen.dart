@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/providers.dart';
+import '../services/notification_service.dart';
+import '../services/storage_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/create_group_dialog.dart';
 import '../widgets/join_group_dialog.dart';
@@ -18,6 +20,14 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadGroups();
+    _requestNotificationPermissions();
+    // Clear last visited group when on home
+    context.read<StorageService>().setLastGroupId(null);
+  }
+
+  Future<void> _requestNotificationPermissions() async {
+    final notificationService = context.read<NotificationService>();
+    await notificationService.requestPermissions();
   }
 
   Future<void> _loadGroups() async {

@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import '../services/storage_service.dart';
+import '../services/notification_service.dart';
 
 class TasksProvider extends ChangeNotifier {
   final StorageService _storage;
+  final NotificationService _notifications;
   List<Task> _tasks = [];
   bool _isLoading = false;
   String? _error;
@@ -12,7 +14,7 @@ class TasksProvider extends ChangeNotifier {
   String? _filterAssigneeId;
   bool _showCompleted = false;
 
-  TasksProvider(this._storage);
+  TasksProvider(this._storage, this._notifications);
 
   List<Task> get tasks => _filteredTasks;
   List<Task> get allTasks => _tasks;
@@ -120,6 +122,9 @@ class TasksProvider extends ChangeNotifier {
     );
     await _storage.saveTask(task);
     _tasks.add(task);
+    if (task.reminderTime != null) {
+      await _notifications.scheduleNotification(task);
+    }
     notifyListeners();
     return task;
   }
@@ -146,6 +151,13 @@ class TasksProvider extends ChangeNotifier {
     );
     await _storage.saveTask(updatedTask);
     _tasks[index] = updatedTask;
+    
+    if (updatedTask.reminderTime != null && updatedTask.status == TaskStatus.todo) {
+      await _notifications.scheduleNotification(updatedTask);
+    } else {
+      await _notifications.cancelNotification(updatedTask.id);
+    }
+    
     notifyListeners();
   }
 
@@ -158,11 +170,19 @@ class TasksProvider extends ChangeNotifier {
     final updatedTask = task.copyWith(status: newStatus);
     await _storage.saveTask(updatedTask);
     _tasks[index] = updatedTask;
+    
+    if (newStatus == TaskStatus.done) {
+      await _notifications.cancelNotification(updatedTask.id);
+    } else if (updatedTask.reminderTime != null) {
+      await _notifications.scheduleNotification(updatedTask);
+    }
+    
     notifyListeners();
   }
 
   Future<void> deleteTask(String taskId) async {
     await _storage.deleteTask(taskId);
+    await _notifications.cancelNotification(taskId);
     _tasks.removeWhere((t) => t.id == taskId);
     notifyListeners();
   }
