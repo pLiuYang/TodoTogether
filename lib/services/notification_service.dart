@@ -1,18 +1,21 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
-import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:flutter/services.dart';
 
 import '../models/task.dart';
+
 class NotificationService {
   final FlutterLocalNotificationsPlugin _notifications = FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
-    // Initialize timezone
-    tz.initializeTimeZones();
-    final tzInfo = await FlutterTimezone.getLocalTimezone();
-    tz.setLocalLocation(tz.getLocation(tzInfo.identifier));
+    // Initialize timezone database
+    tz_data.initializeTimeZones();
+    
+    // Get the local timezone name (returns a String like "America/New_York")
+    final String timeZoneName = await FlutterTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(timeZoneName));
 
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -52,6 +55,7 @@ class NotificationService {
       return;
     }
 
+    // Don't schedule notifications for past times
     if (task.reminderTime!.isBefore(DateTime.now())) {
       return;
     }
@@ -72,15 +76,17 @@ class NotificationService {
         'Task Reminder',
         task.title,
         tz.TZDateTime.from(task.reminderTime!, tz.local),
-        const NotificationDetails(
+        NotificationDetails(
           android: AndroidNotificationDetails(
             'task_reminders',
             'Task Reminders',
             channelDescription: 'Notifications for task reminders',
             importance: Importance.max,
             priority: Priority.high,
+            playSound: true,
+            enableVibration: true,
           ),
-          iOS: DarwinNotificationDetails(),
+          iOS: const DarwinNotificationDetails(),
         ),
         androidScheduleMode: mode,
         uiLocalNotificationDateInterpretation:
@@ -94,15 +100,17 @@ class NotificationService {
           'Task Reminder',
           task.title,
           tz.TZDateTime.from(task.reminderTime!, tz.local),
-          const NotificationDetails(
+          NotificationDetails(
             android: AndroidNotificationDetails(
               'task_reminders',
               'Task Reminders',
               channelDescription: 'Notifications for task reminders',
               importance: Importance.max,
               priority: Priority.high,
+              playSound: true,
+              enableVibration: true,
             ),
-            iOS: DarwinNotificationDetails(),
+            iOS: const DarwinNotificationDetails(),
           ),
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
           uiLocalNotificationDateInterpretation:
